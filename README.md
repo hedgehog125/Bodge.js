@@ -37,43 +37,53 @@ This should be able to replace node-global-key-listener in most situations. The 
 
 Exports:
  * addHotKey(combo: **string[]** | **string**, callback(otherIsBlocking: **boolean**) -> **undefined** | **string**, strictness: **number** = **1**) -> **void**
- Adds a callback to be run when the combo (or single key) is pressed. Key names are from `globalKeyListenerEvent.name` or `globalKeyListenerEvent.rawKey.name` if the first is empty. You can find out key names by uncommenting out `enableKeyDebug()` in index.js.
+ 
+   Adds a callback to be run when the combo (or single key) is pressed. Key names are from `globalKeyListenerEvent.name` or `globalKeyListenerEvent.rawKey.name` if the first is empty. You can find out key names by uncommenting out `enableKeyDebug()` in index.js.
 
- In the callback, returning a value sets the block mode: "BLOCK_ALL" hides the hotkey presses from all programs and other hotkeys, "BLOCK" hides it from just other programs and "NONE" just passively detects it. If you don't return a value, the default is "BLOCK_ALL". If a key press triggers 2 hotkeys, the one added first will run first, and then the second will run with it's "otherIsBlocking" argument set to true. But that's only if the hotkey before returned "BLOCK".
+   In the callback, returning a value sets the block mode: "BLOCK_ALL" hides the hotkey presses from all programs and other hotkeys, "BLOCK" hides it from just other programs and "NONE" just passively detects it. If you don't return a value, the default is "BLOCK_ALL". If a key press triggers 2 hotkeys, the one added first will run first, and then the second will run with it's "otherIsBlocking" argument set to true. But that's only if the hotkey before returned "BLOCK".
 
  * isPressed(keyName: **string**) -> **boolean**
- Returns if the key with that name is currently being pressed. Find out key names by uncommenting `enableKeyDebug()` in index.js.
+ 
+   Returns if the key with that name is currently being pressed. Find out key names by uncommenting `enableKeyDebug()` in index.js.
 
  * currentlyDown: **Set**
- A set containing all the names of all the keys currently being pressed down. Find out key names by uncommenting `enableKeyDebug()` in index.js.
+
+   A set containing all the names of all the keys currently being pressed down. Find out key names by uncommenting `enableKeyDebug()` in index.js.
 
  * enableKeyDebug() -> **void** / disableKeyDebug() -> **void**
- Enables/disables the key debug. It logs to the console every time a key is pressed or released, as well as when a hotkey has been pressed.
+ 
+   Enables/disables the key debug. It logs to the console every time a key is pressed or released, as well as when a hotkey has been pressed.
 
 ## src/util/instantKeyboard.js
 This is a pre-configured Nut.js keyboard that presses keys instantly.
 
 Exports:
- * keyboard: KeyboardClass
- A Nut.js keyboard that's already configured to have no delay between keys.
+ * keyboard: **KeyboardClass**
+ 
+   A Nut.js keyboard that's already configured to have no delay between keys.
 
  * tapKeys(keys: **Key[]** | **Key**) -> **Promise&lt;void&gt;**
- Presses the key or array of keys and immediately releases them. Unlike in the hotkeys module, keys are enums here rather than strings. The returned promise resolves when the keys have been released.
+ 
+   Presses the key or array of keys and immediately releases them. Unlike in the hotkeys module, keys are enums here rather than strings. The returned promise resolves when the keys have been released.
 
- * Key: enum
- Rexported from Nut.js
+ * Key: **enum**
+ 
+   Rexported from Nut.js
 
 ## src/util/swapKeys.js
-Provides a function for easily swapping keys.
+
+  Provides a function for easily swapping keys.
 
 Exports:
  swapKeys(keyEnumNamePair1: **KeyEnumNamePair**, keyEnumNamePair2: **KeyEnumNamePair**) -> **void**
- Where **KeyEnumNamePair** is [keyName: **string** | **string\[\]**, keyEnum:**Key** | **Key\[\]**]
+ 
+   Where **KeyEnumNamePair** is [keyName: **string** | **string\[\]**, keyEnum:**Key** | **Key\[\]**]
 
- Swaps the 2 keys by blocking them and emulating pressing the other. Since they're just hotkeys, the duration of the key presses aren't considered, so even a long press will just be remapped to a short tap. This function is primerally designed for single keys, but you can also use arrays of key names and enums.
+   Swaps the 2 keys by blocking them and emulating pressing the other. Since they're just hotkeys, the duration of the key presses aren't considered, so even a long press will just be remapped to a short tap. This function is primerally designed for single keys, but you can also use arrays of key names and enums.
 
-* Key: enum
- Rexported from Nut.js
+* Key: **enum**
+
+   Rexported from Nut.js
 
 # Quick note
 It should go without saying, but don't make keyloggers with this unless you've got permission, or otherwise do anything illegal or unethical. You should also make sure you're not using `enableKeyDebug()` once you're done developing an automation, as your key presses could potentially end up in a log somewhere (and probably take up a bunch of space). It's fine to use while you're developing, but you should probably disable it once you've got the few keys you wanted to check.
