@@ -1,4 +1,5 @@
 import { GlobalKeyboardListener } from "node-global-key-listener";
+import { log } from "./server.js";
 
 const MODIFIERS = new Set([
 	"LEFT CTRL",
@@ -11,6 +12,7 @@ const MODIFIERS = new Set([
 	"RIGHT SHIFT"
 ]);
 const IGNORE_FOR_TIME = 300;
+const RELEASE_AFTER = 15 * 1000; // Consider a key released after 15 seconds because sometimes the event can be missed
 
 let debugKeys = false;
 export function enableKeyDebug() {
@@ -23,7 +25,20 @@ export function disableKeyDebug() {
 let pressed = new Map();
 let ignoreUntil = 0;
 
-(new GlobalKeyboardListener()).addListener((e) => {
+function displayError(msg, isInfo = false) {
+	const message = `Global Key Listener ${isInfo? "info" : "error"}: ${msg}`;
+	log(message);
+};
+
+(new GlobalKeyboardListener({
+	windows: {
+		onError(errorCode) { displayError(errorCode) },
+		onInfo(info) { displayError(info, true) }
+	},
+	mac: {
+		onError(errorCode) { displayError(errorCode) },
+	}
+})).addListener(e => {
 	const shouldIgnore = Date.now() < ignoreUntil;
 	const name = e.name == ""? e.rawKey.name : e.name;
 
@@ -31,7 +46,7 @@ let ignoreUntil = 0;
 	const wasPressed = !!pressed.get(name);
 	if (isThisKeyPressed == wasPressed) return;
 
-	pressed.set(name, isThisKeyPressed);
+	pressed.set(name, isThisKeyPressed? Date.now() : null);
 
 	if (isThisKeyPressed) {
 		currentlyDown.add(name);
@@ -112,3 +127,20 @@ export function addHotkey(combo, callback, strictness = 1) {
 		]);
 	}
 };
+
+function checkKeyTimeouts() {
+	const now = Date.now();
+	for (const [keyName, timePressed] of pressed) {
+		if (timePressed == null) continue; // Not pressed
+
+		if (now - timePressed >= RELEASE_AFTER) {
+			pressed.set(keyName, null);
+			currentlyDown.delete(keyName);
+			if (debugKeys) console.log(` -> Released ${keyName} due to a timeout (the event is assumed to have been missed)`);
+		}
+	}
+};
+
+setInterval(_ => {
+	checkKeyTimeouts();
+}, 1000);
