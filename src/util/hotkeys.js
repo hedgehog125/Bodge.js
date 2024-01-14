@@ -57,8 +57,19 @@ function displayError(msg, isInfo = false) {
 	}
 
 	let shouldBlock = false;
+	for (const callback of anyKeyListeners) {
+		const output = callback({
+			name,
+			isDown: isThisKeyPressed
+		}, shouldBlock); // If another function has already partly blocked the combo
+
+		ignoreUntil = Date.now() + IGNORE_FOR_TIME;
+		if (output == "BLOCK_ALL") return true;
+		else if (output == "BLOCK") shouldBlock = true; // Still run other callbacks, but block the combo to other applications
+	}
+
 	if (isThisKeyPressed) {
-		const keyListeners = listeners.get(name)?? [];
+		const keyListeners = hotkeyListeners.get(name)?? [];
 		for (const listenerData of keyListeners) {
 			const [
 				callback, otherKeys,
@@ -112,22 +123,29 @@ function displayError(msg, isInfo = false) {
 export const isPressed = keyName => !!pressed.get(keyName);
 export const currentlyDown = new Set();
 
-let listeners = new Map();
+let hotkeyListeners = new Map();
 export function addHotkey(combo, callback, strictness = 1) {
 	if (! Array.isArray(combo)) combo = [combo];
 	combo = new Set(combo);
 
 	for (const key of combo) {
-		if (! listeners.has(key)) listeners.set(key, []);
+		if (! hotkeyListeners.has(key)) hotkeyListeners.set(key, []);
 
-		listeners.get(key).push([
+		hotkeyListeners.get(key).push([
 			callback,
 			Array.from(combo).filter(filterKey => filterKey != key),
 			strictness
 		]);
 	}
 };
+let anyKeyListeners = [];
+export function listenForAnyKey(callback) {
+	anyKeyListeners.push(callback);
+}
 
+setInterval(_ => {
+	checkKeyTimeouts();
+}, 1000);
 function checkKeyTimeouts() {
 	const now = Date.now();
 	for (const [keyName, timePressed] of pressed) {
@@ -136,11 +154,14 @@ function checkKeyTimeouts() {
 		if (now - timePressed >= RELEASE_AFTER) {
 			pressed.set(keyName, null);
 			currentlyDown.delete(keyName);
+			for (const callback of anyKeyListeners) {
+				callback({
+					name: keyName,
+					isDown: false
+				}, false); // If another function has already partly blocked the combo
+			}
+
 			if (debugKeys) console.log(` -> Released ${keyName} due to a timeout (the event is assumed to have been missed)`);
 		}
 	}
 };
-
-setInterval(_ => {
-	checkKeyTimeouts();
-}, 1000);

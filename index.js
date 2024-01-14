@@ -1,4 +1,5 @@
 const PORT = 7001;
+process.title = "Bodge.js";
 
 import { start } from "./src/util/server.js";
 import { enableKeyDebug } from "./src/util/hotkeys.js";
@@ -12,4 +13,4 @@ import "./src/capture.js";
 
 
 // Start the server
-start(PORT);
+//start(PORT);
