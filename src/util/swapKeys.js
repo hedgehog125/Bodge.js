@@ -20,6 +20,7 @@ export function swapKeys([keyEnum1, keyName1], [keyEnum2, keyName2]) {
 				keyboard.releaseKey(isKey1? keyEnum2 : keyEnum1);
 			}
 			ignoreNext = true;
+			return "BLOCK_ALL";
 		}
 	});
 };
